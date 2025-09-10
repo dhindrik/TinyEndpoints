@@ -115,6 +115,13 @@ public class ProductEndpoints
             return Results.NotFound();
         }
     }
+
+    // New endpoint with Name property to verify generator adds WithName
+    [Get("products/named", Name = "NamedProducts")]
+    public static IResult GetNamedEndpoint()
+    {
+        return Results.Ok(new { Status = "ok" });
+    }
 }
 
 public record BuyRequest(int Id, int Quantity);

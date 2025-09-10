@@ -81,6 +81,14 @@ public class EndpointSourceGenerator : ISourceGenerator
                 configuratorType = attrClass.TypeArguments[0].ToDisplayString();
             }
 
+            // Name support
+            string? endpointName = null;
+            var nameProp = httpAttr.NamedArguments.FirstOrDefault(kv => kv.Key == "Name").Value;
+            if (nameProp.Value is string s && !string.IsNullOrWhiteSpace(s))
+            {
+                endpointName = s.Replace("\"", "\\\""); // escape quotes
+            }
+
             string handlerReference;
             if (symbol.IsStatic)
             {
@@ -98,11 +106,26 @@ public class EndpointSourceGenerator : ISourceGenerator
 
             if (configuratorType is not null)
             {
-                mappingBuilder.AppendLine($"{{ var b = app.{methodKind}(\"{route}\", {handlerReference}); var cfg = new {configuratorType}(); cfg.Configure(b); }}");
+                // We wrap in braces to keep b scoped local
+                if (endpointName is not null)
+                {
+                    mappingBuilder.AppendLine($"{{ var b = app.{methodKind}(\"{route}\", {handlerReference}).WithName(\"{endpointName}\"); var cfg = new {configuratorType}(); cfg.Configure(b); }}");
+                }
+                else
+                {
+                    mappingBuilder.AppendLine($"{{ var b = app.{methodKind}(\"{route}\", {handlerReference}); var cfg = new {configuratorType}(); cfg.Configure(b); }}");
+                }
             }
             else
             {
-                mappingBuilder.AppendLine($"app.{methodKind}(\"{route}\", {handlerReference});");
+                if (endpointName is not null)
+                {
+                    mappingBuilder.AppendLine($"app.{methodKind}(\"{route}\", {handlerReference}).WithName(\"{endpointName}\");");
+                }
+                else
+                {
+                    mappingBuilder.AppendLine($"app.{methodKind}(\"{route}\", {handlerReference});");
+                }
             }
         }
 
