@@ -2,8 +2,12 @@
 
 Lightweight, attribute-driven endpoint registration for ASP.NET Core Minimal APIs powered by a Roslyn source generator.
 
-You decorate methods with HTTP verb attributes (`Get`, `Post`, `Put`, `Delete`). A source generator discovers them at build time and emits registration code you invoke at startup.
-
+## Installation
+Install the NuGet package via the .NET CLI:
+```sh
+dotnet add package TinyEndpoints
+```
+Or search for "TinyEndpoints" in the NuGet Package Manager in Visual Studio.
 
 ## Quick Start
 1. Add a partial `Program` annotated with `[GenerateEndpoints]`:
@@ -85,4 +89,3 @@ public class ProductEndpoints
     public IResult Create(IProductService products, CreateProduct dto)
         => Results.Created($"/products/{dto.Id}", products.Add(dto));
 }
-```
