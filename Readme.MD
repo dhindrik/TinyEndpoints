@@ -24,7 +24,7 @@ using TinyEndpoints;
 public class UserEndpoints
 {
     [Get("users/{id}")]
-    public static IResult GetUser(IUserService svc, string id) =>
+    public IResult GetUser(IUserService svc, string id) =>
         svc.TryGet(id, out var u) ? Results.Ok(u) : Results.NotFound();
 
     [Post<AuthConfigurator>("member/users")]
