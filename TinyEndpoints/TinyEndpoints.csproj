@@ -6,6 +6,11 @@
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
     <IsPackable>true</IsPackable>
+
+	  <PackageLicenseUrl>https://github.com/dhindrik/TinyEndpoints/blob/master/LICENSE</PackageLicenseUrl>
+	  <Copyright>Copyright 2025 - Daniel Hindrikes</Copyright>
+	  <Authors>Daniel Hindrikes</Authors>
+	  <Company />
   </PropertyGroup>
 
   <ItemGroup>
