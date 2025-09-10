@@ -6,7 +6,7 @@ You decorate methods with HTTP verb attributes (`Get`, `Post`, `Put`, `Delete`).
 
 
 ## Quick Start
-1. Add a partial `Program` (or any partial class) annotated with `[GenerateEndpoints]`:
+1. Add a partial `Program` annotated with `[GenerateEndpoints]`:
 ```csharp
 using TinyEndpoints;
 
