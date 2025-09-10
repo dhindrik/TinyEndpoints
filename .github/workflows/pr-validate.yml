@@ -1,0 +1,30 @@
+name: 'PR Validation'
+
+on:
+  pull_request:
+    branches: ["main"]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: |
+            9.0.x
+
+      - name: Restore dependencies
+        run: dotnet restore
+
+      - name: Build solution
+        run: dotnet build --configuration Release --no-restore
+
+      - name: Run tests
+        run: dotnet test --configuration Release --no-build --verbosity normal
+
+      - name: Pack TinyEndpoints
+        run: dotnet pack TinyEndpoints/TinyEndpoints.csproj --configuration Release --no-build --output ./nupkgs

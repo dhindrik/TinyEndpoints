@@ -6,7 +6,7 @@ on:
 
 jobs:
   build-and-publish:
-    runs-on: windows-latest
+    runs-on: ubuntu-latest
 
     steps:
     - name: Checkout repository
@@ -25,7 +25,7 @@ jobs:
       run: dotnet build --configuration Release --no-restore
 
     - name: Pack TinyEndpoints
-      run: dotnet pack TinyEndpoints/TinyEndpoints.csproj --configuration Release --no-build --output ./nupkgs
+      run: dotnet pack TinyEndpoints/TinyEndpoints.csproj --configuration Release --no-build --output ./nupkgs -p:PackageVersion=${{ github.ref_name }}
 
     - name: Publish NuGet package
       run: dotnet nuget push "./nupkgs/*.nupkg" --api-key ${{ secrets.NUGET_API_KEY }} --source https://api.nuget.org/v3/index.json
