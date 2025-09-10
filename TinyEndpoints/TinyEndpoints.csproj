@@ -5,10 +5,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
     <OutputType>Library</OutputType>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\TinyEndpoints.Generators\TinyEndpoints.Generators.csproj" OutputItemType="Analyzer" ReferenceOutputAssembly="false" />
+    <ProjectReference Include="..\TinyEndpoints.Generators\TinyEndpoints.Generators.csproj" ReferenceOutputAssembly="false"  />
+    <None Include="..\TinyEndpoints.Generators\bin\$(Configuration)\netstandard2.0\TinyEndpoints.Generators.dll" Pack="true" PackagePath="analyzers/dotnet/cs" Visible="false" />
   </ItemGroup>
 
-</Project>
+</Project> 

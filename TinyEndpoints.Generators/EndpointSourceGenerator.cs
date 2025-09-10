@@ -129,9 +129,6 @@ public class EndpointSourceGenerator : ISourceGenerator
             }
         }
 
-        // Nothing to emit if no endpoints discovered
-        if (mappingBuilder.Length == 0) return;
-
 
         // For each annotated class emit a partial containing registration method.
         foreach (var cls in annotatedClasses)
