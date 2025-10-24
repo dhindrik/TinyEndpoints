@@ -122,6 +122,17 @@ public class ProductsEndpointsTests : IClassFixture<CustomWebApplicationFactory>
     }
 
     [Fact]
+    public async Task UpdateTitle_Post_ShouldAlsoReturnUpdatedProduct()
+    {
+        var payload = new { Title = "Updated Via Post" };
+        var response = await _client.PostAsJsonAsync("/products/1/title", payload);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        var updated = await response.Content.ReadFromJsonAsync<Product>();
+        Assert.NotNull(updated);
+        Assert.Equal("Updated Via Post", updated!.Title);
+    }
+
+    [Fact]
     public async Task UpdateTitle_NotFound_ShouldReturn404()
     {
         var payload = new { Title = "Does Not Matter" };

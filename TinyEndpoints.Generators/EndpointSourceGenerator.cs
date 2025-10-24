@@ -49,46 +49,14 @@ public class EndpointSourceGenerator : ISourceGenerator
             var model = compilation.GetSemanticModel(methodSyntax.SyntaxTree);
             if (model.GetDeclaredSymbol(methodSyntax) is not IMethodSymbol symbol) continue;
 
-            // Find first attribute that derives from EndpointAttribute
-            var httpAttr = symbol.GetAttributes().FirstOrDefault(a => InheritsFrom(a.AttributeClass, endpointAttributeBase));
-            if (httpAttr == null) continue;
-
-            var route = httpAttr.ConstructorArguments.FirstOrDefault().Value?.ToString();
-            if (route is null) continue;
-
-            var methodKind = httpAttr.AttributeClass?.Name switch
-            {
-                string n when n.StartsWith("GetAttribute") => "MapGet",
-                string n when n.StartsWith("PostAttribute") => "MapPost",
-                string n when n.StartsWith("PutAttribute") => "MapPut",
-                string n when n.StartsWith("DeleteAttribute") => "MapDelete",
-                _ => null
-            };
-            if (methodKind is null) continue;
+            // Find all attributes that derive from EndpointAttribute
+            var httpAttrs = symbol.GetAttributes().Where(a => InheritsFrom(a.AttributeClass, endpointAttributeBase)).ToArray();
+            if (httpAttrs.Length == 0) continue;
 
             var containingType = symbol.ContainingType.ToDisplayString();
             var methodName = symbol.Name;
 
-            // Determine configurator type
-            string? configuratorType = null;
-            var configuratorProp = httpAttr.NamedArguments.FirstOrDefault(kv => kv.Key == "ConfiguratorType").Value;
-            if (configuratorProp.Value is ITypeSymbol typeSymbol)
-            {
-                configuratorType = typeSymbol.ToDisplayString();
-            }
-            else if (httpAttr.AttributeClass is INamedTypeSymbol attrClass && attrClass.TypeArguments.Length == 1)
-            {
-                configuratorType = attrClass.TypeArguments[0].ToDisplayString();
-            }
-
-            // Name support
-            string? endpointName = null;
-            var nameProp = httpAttr.NamedArguments.FirstOrDefault(kv => kv.Key == "Name").Value;
-            if (nameProp.Value is string s && !string.IsNullOrWhiteSpace(s))
-            {
-                endpointName = s.Replace("\"", "\\\""); // escape quotes
-            }
-
+            // Prepare handler reference (static or instance)
             string handlerReference;
             if (symbol.IsStatic)
             {
@@ -104,27 +72,63 @@ public class EndpointSourceGenerator : ISourceGenerator
                 handlerReference = $"{fieldName}.{methodName}"; // instance method group
             }
 
-            if (configuratorType is not null)
+            foreach (var httpAttr in httpAttrs)
             {
-                // We wrap in braces to keep b scoped local
-                if (endpointName is not null)
+                var route = httpAttr.ConstructorArguments.FirstOrDefault().Value?.ToString();
+                if (route is null) continue;
+
+                var methodKind = httpAttr.AttributeClass?.Name switch
                 {
-                    mappingBuilder.AppendLine($"{{ var b = app.{methodKind}(\"{route}\", {handlerReference}).WithName(\"{endpointName}\"); var cfg = new {configuratorType}(); cfg.Configure(b); }}");
+                    string n when n.StartsWith("GetAttribute") => "MapGet",
+                    string n when n.StartsWith("PostAttribute") => "MapPost",
+                    string n when n.StartsWith("PutAttribute") => "MapPut",
+                    string n when n.StartsWith("DeleteAttribute") => "MapDelete",
+                    _ => null
+                };
+                if (methodKind is null) continue;
+
+                // Determine configurator type
+                string? configuratorType = null;
+                var configuratorProp = httpAttr.NamedArguments.FirstOrDefault(kv => kv.Key == "ConfiguratorType").Value;
+                if (configuratorProp.Value is ITypeSymbol typeSymbol)
+                {
+                    configuratorType = typeSymbol.ToDisplayString();
+                }
+                else if (httpAttr.AttributeClass is INamedTypeSymbol attrClass && attrClass.TypeArguments.Length == 1)
+                {
+                    configuratorType = attrClass.TypeArguments[0].ToDisplayString();
+                }
+
+                // Name support
+                string? endpointName = null;
+                var nameProp = httpAttr.NamedArguments.FirstOrDefault(kv => kv.Key == "Name").Value;
+                if (nameProp.Value is string s && !string.IsNullOrWhiteSpace(s))
+                {
+                    endpointName = s.Replace("\"", "\\\""); // escape quotes
+                }
+
+                if (configuratorType is not null)
+                {
+                    // We wrap in braces to keep b scoped local
+                    if (endpointName is not null)
+                    {
+                        mappingBuilder.AppendLine($"{{ var b = app.{methodKind}(\"{route}\", {handlerReference}).WithName(\"{endpointName}\"); var cfg = new {configuratorType}(); cfg.Configure(b); }}");
+                    }
+                    else
+                    {
+                        mappingBuilder.AppendLine($"{{ var b = app.{methodKind}(\"{route}\", {handlerReference}); var cfg = new {configuratorType}(); cfg.Configure(b); }}");
+                    }
                 }
                 else
                 {
-                    mappingBuilder.AppendLine($"{{ var b = app.{methodKind}(\"{route}\", {handlerReference}); var cfg = new {configuratorType}(); cfg.Configure(b); }}");
-                }
-            }
-            else
-            {
-                if (endpointName is not null)
-                {
-                    mappingBuilder.AppendLine($"app.{methodKind}(\"{route}\", {handlerReference}).WithName(\"{endpointName}\");");
-                }
-                else
-                {
-                    mappingBuilder.AppendLine($"app.{methodKind}(\"{route}\", {handlerReference});");
+                    if (endpointName is not null)
+                    {
+                        mappingBuilder.AppendLine($"app.{methodKind}(\"{route}\", {handlerReference}).WithName(\"{endpointName}\");");
+                    }
+                    else
+                    {
+                        mappingBuilder.AppendLine($"app.{methodKind}(\"{route}\", {handlerReference});");
+                    }
                 }
             }
         }

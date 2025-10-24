@@ -55,6 +55,7 @@ public class ProductEndpoints
 
     // PutAttribute (non-generic)
     [Put("products/{id}/title")]
+    [Post("products/{id}/title")]
     public IResult UpdateTitle(IProductService productService, string id, UpdateTitleRequest request)
     {
         try
